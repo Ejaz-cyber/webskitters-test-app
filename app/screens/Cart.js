@@ -1,5 +1,5 @@
 import {useNavigation} from '@react-navigation/native';
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,24 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-remix-icon';
 import {useDispatch, useSelector} from 'react-redux';
-import { clearCart, decrementQuantity, incrementQuantity } from '../slices/cartSlice';
-import { addOrder } from '../slices/orderSlice';
-import { globalStyles } from './styles/globalStyles';
+import {
+  clearCart,
+  decrementQuantity,
+  incrementQuantity,
+} from '../slices/cartSlice';
+import {addOrder} from '../slices/orderSlice';
+import {globalStyles} from './styles/globalStyles';
+import colors from './styles/colors';
 
 const Cart = () => {
   const cartItems = useSelector(state => state.cart.cartItems);
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+  const [isLoading, setLoading] = useState(false);
 
   const totalAmount = cartItems
     .reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -24,39 +32,45 @@ const Cart = () => {
 
   const navigation = useNavigation();
 
-  const handleDecrement = (id) => {
-    dispatch(decrementQuantity(id))
-  }
-  
-  const handleIncrement = (id) => {
-    dispatch(incrementQuantity(id))
-  }
+  const handleDecrement = id => {
+    dispatch(decrementQuantity(id));
+  };
+
+  const handleIncrement = id => {
+    dispatch(incrementQuantity(id));
+  };
 
   const getOrderId = () => {
     const randomNumber = Math.floor(Math.random() * 90000) + 10000;
-    return randomNumber
-  }
+    return randomNumber;
+  };
   const handleCheckout = () => {
-    let orderId = getOrderId()
+    setLoading(true);
+  
+    let orderId = getOrderId();
     let orderBody = {
       orderId,
       date: new Date().toLocaleString(),
-      status: "in-progress",
-      items: cartItems
-    }
-    dispatch(addOrder(orderBody))
-    dispatch(clearCart())
-
-    navigation.reset({
-      index: 1, 
-      routes: [
-        { name: 'ProductList' }, 
-        { name: 'OrderDetails', params: { orderId } } 
-      ],
-    });
-
-    // navigation.navigate('OrderDetails', {orderId})
-  }
+      status: 'in-progress',
+      items: cartItems,
+    };
+  
+    //delay (e.g., 2 seconds)
+    setTimeout(() => {
+      dispatch(addOrder(orderBody));
+      dispatch(clearCart());
+      setLoading(false);
+  
+      navigation.reset({
+        index: 1,
+        routes: [
+          { name: 'ProductList' },
+          { name: 'OrderDetails', params: { orderId } },
+        ],
+      });
+    }, 2000); // 2000ms = 2 seconds
+  };
+  
 
   const renderItem = ({item}) => (
     <View style={styles.itemContainer}>
@@ -94,21 +108,47 @@ const Cart = () => {
 
   return (
     <View style={globalStyles.container}>
-      <View style={globalStyles.backIcon}>
+      <Modal
+        transparent={true}
+        animationType="fade"
+        visible={isLoading}
+        // onRequestClose={hideLoading} // Handle back press
+      >
+        <View style={globalStyles.modalBackground}>
+          <View style={globalStyles.activityIndicatorWrapper}>
+            <ActivityIndicator size="large" color={colors.orange} />
+          </View>
+        </View>
+      </Modal>
+
+      <TouchableOpacity
+        style={globalStyles.backIcon}
+        onPress={() => navigation.goBack()}>
         <Icon name="arrow-left-circle-fill" size={40} />
+      </TouchableOpacity>
+      <View
+        style={{
+          marginTop: 60,
+        }}>
+        <Text style={styles.header}>Cart</Text>
+        <FlatList
+          data={cartItems}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+        />
       </View>
-      <Text style={styles.title}>Cart</Text>
-      <FlatList
-        data={cartItems}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-      />
-      <View style={styles.totalContainer}>
-        <Text style={styles.totalText}>Total Price: ${totalAmount}</Text>
+
+      <View
+        style={[
+          globalStyles.actionContainer,
+          {position: 'absolute', bottom: 0, right: 0},
+        ]}>
         <TouchableOpacity
-          style={styles.checkoutButton}
+          style={globalStyles.primaryBtn}
           onPress={handleCheckout}>
-          <Text style={styles.checkoutButtonText}>Check Out</Text>
+          <Text style={globalStyles.buyButtonText}>
+            Place Order: ${totalAmount}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -116,15 +156,10 @@ const Cart = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8E6F3',
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
+  header: {
+    fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginVertical: 16,
   },
   itemContainer: {
     flexDirection: 'row',
@@ -155,16 +190,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  quantity: {
-    marginHorizontal: 10,
-    fontSize: 16,
-  },
   totalContainer: {
     marginTop: 20,
     padding: 10,
     backgroundColor: '#fff',
     borderRadius: 8,
     alignItems: 'center',
+    position: 'absolute',
+    bottom: 40,
   },
   totalText: {
     fontSize: 18,
@@ -228,6 +261,7 @@ const styles = StyleSheet.create({
   quantity: {
     fontSize: 16,
     marginHorizontal: 10,
+    fontWeight: 'bold',
   },
 });
 

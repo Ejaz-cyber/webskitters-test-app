@@ -1,5 +1,7 @@
 import {
+  ActivityIndicator,
   Button,
+  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -11,47 +13,58 @@ import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-remix-icon';
 import colors from './styles/colors';
 import {globalStyles} from './styles/globalStyles';
-import { useLoginUserMutation } from '../services/userApi';
-import { useDispatch } from 'react-redux';
+import {useLoginUserMutation} from '../services/userApi';
+import {useDispatch} from 'react-redux';
 
 const Login = () => {
   const navigation = useNavigation();
   const [username, setusername] = useState('emilys');
   const [password, setPassword] = useState('emilyspass');
 
-  const [loginUser, loginUserResult] = useLoginUserMutation()
-  const dispatch = useDispatch()
+  const [loginUser, loginUserResult] = useLoginUserMutation();
+  const dispatch = useDispatch();
 
   const handleLogin = () => {
     // Your login logic here
     console.log('Login with username:', username, 'and password:', password);
     loginUser({
-        username,
-        password
-    })
-
+      username,
+      password,
+    });
   };
 
   useEffect(() => {
     // console.log("login user result", loginUserResult)
-    if(loginUserResult.status == "fulfilled"){
-        navigation.navigate("ProductList")
+    if (loginUserResult.status == 'fulfilled') {
+      navigation.navigate('ProductList');
     }
-
-  }, [loginUserResult])
+  }, [loginUserResult]);
 
   return (
     <View style={globalStyles.container}>
       {/* <View style={styles.headerDecoration}></View> */}
 
+        <Modal
+          transparent={true}
+          animationType="fade"
+          visible={loginUserResult.isLoading}
+          // onRequestClose={hideLoading} // Handle back press
+        >
+          <View style={globalStyles.modalBackground}>
+            <View style={globalStyles.activityIndicatorWrapper}>
+              <ActivityIndicator size="large" color={colors.orange} />
+            </View>
+          </View>
+        </Modal>
+
       <View style={styles.content}>
         <Text style={globalStyles.title}>Login</Text>
         <Text style={globalStyles.subtitle}>Please sign in to continue.</Text>
 
-        <View style={styles.inputContainer}>
-          <Icon name="mail-fill" size="24" color="black" />
+        <View style={globalStyles.inputContainer}>
+          <Icon name="user-5-fill" size="24" color="black" />
           <TextInput
-            style={styles.input}
+            style={globalStyles.input}
             value={username}
             onChangeText={setusername}
             placeholder="Username"
@@ -60,10 +73,10 @@ const Login = () => {
           />
         </View>
 
-        <View style={styles.inputContainer}>
-          <Icon name="mail-lock-fill" size="24" color="black" />
+        <View style={globalStyles.inputContainer}>
+          <Icon name="key-fill" size="24" color="black" />
           <TextInput
-            style={styles.input}
+            style={globalStyles.input}
             value={password}
             onChangeText={setPassword}
             placeholder="Password"
@@ -71,13 +84,13 @@ const Login = () => {
             placeholderTextColor={colors.gray}
             secureTextEntry
           />
-          <TouchableOpacity>
-            <Text style={styles.forgotText}>FORGOT</Text>
-          </TouchableOpacity>
         </View>
+        <TouchableOpacity style={styles.forgot}>
+          <Text style={styles.forgotText}>FORGOT</Text>
+        </TouchableOpacity>
 
-        <TouchableOpacity style={globalStyles.button} onPress={handleLogin}>
-          <Text style={globalStyles.buttonText}>LOGIN</Text>
+        <TouchableOpacity style={[globalStyles.primaryBtn, {marginTop: 30}]} onPress={handleLogin}>
+          <Text style={globalStyles.buttonText}>Login</Text>
         </TouchableOpacity>
       </View>
       <Text style={styles.footerText}>
@@ -104,18 +117,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 30,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 8,
-    fontSize: 16,
-    color: colors.black,
+  forgot: {
+    alignItems: 'flex-end',
   },
   icon: {
     marginRight: 10,
@@ -129,8 +132,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
     color: colors.gray,
-    marginBottom: 50
-
+    marginBottom: 50,
   },
   signUpText: {
     color: colors.orange,

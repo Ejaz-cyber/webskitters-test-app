@@ -10,56 +10,36 @@ import {
 } from 'react-native';
 import React, {useEffect} from 'react';
 import {getToken} from '../utils/tokenUtils';
-import {useLazyGetProductsQuery} from '../services/productsApi';
+import {
+  useGetProductsQuery,
+  useLazyGetProductsQuery,
+} from '../services/productsApi';
 import {useDispatch, useSelector} from 'react-redux';
 import {setShowDetailsForProduct} from '../slices/productSlice';
 import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-remix-icon';
+import {globalStyles} from './styles/globalStyles';
+import colors from './styles/colors';
+import {storeInfo} from '../utils/staticData';
 
-const storeInfo = {
-  name: 'Store Name',
-  address: 'Store Address',
-  rating: '4.6',
-  ratingsCount: '18k ratings',
-  deliveryTime: '20 min',
-  distance: '4 km',
-  imageUrl: 'https://via.placeholder.com/100', // Placeholder image URL
-};
+const wordLimit = 10;
 
 const ProductList = () => {
-  const [getProducts, productsResponse] = useLazyGetProductsQuery();
+  const {
+    data: products,
+    error,
+    isLoading,
+    isUninitialized,
+    isFetching,
+  } = useGetProductsQuery();
   const dispatch = useDispatch();
   const navigation = useNavigation();
 
-  useEffect(() => {
-    // let delay = setTimeout(() => {
-    //   // getProducts();
-    // }, 2000);
-
-    // return () => {
-    //   clearTimeout(delay);
-    // };
-    getProducts();
-  }, []);
-
-  const prods = useSelector(state => state.product.products);
-
-  useEffect(() => {
-    console.log('prods---', prods);
-  }, [prods]);
-
-  useEffect(() => {
-    console.log(
-      productsResponse.isFetching,
-      productsResponse.isLoading,
-      productsResponse.isUninitialized,
-      productsResponse.currentData,
-    );
-  }, [productsResponse]);
-
   const renderLoader = () => (
-    <View style={styles.loaderContainer}>
-      <ActivityIndicator size="large" color="#0000ff" />
+    <View style={globalStyles.modalBackground}>
+      <View style={globalStyles.activityIndicatorWrapper}>
+        <ActivityIndicator size="large" color={colors.orange} />
+      </View>
     </View>
   );
 
@@ -70,16 +50,28 @@ const ProductList = () => {
         dispatch(setShowDetailsForProduct(item.id));
         navigation.navigate('ProductDetails');
       }}>
+      <View style={globalStyles.productChipContainer}>
+        <View style={globalStyles.productChip}>
+          <Text style={globalStyles.productDiscount}>
+            {`${item.discountPercentage}% Off`}
+          </Text>
+        </View>
+        <View style={globalStyles.productChip}>
+          <Text style={globalStyles.productDiscount}>
+            {item.rating} {""}
+            <Icon name="star-fill" size={12} />
+          </Text>
+        </View>
+      </View>
       <Image source={{uri: item.thumbnail}} style={styles.thumbnail} />
       <View style={styles.productInfo}>
         <Text style={styles.productTitle}>{item.title}</Text>
-        <Text style={styles.productDescription}>{item.description}</Text>
+        <Text style={styles.productDescription}>
+          {item.description?.split(' ').slice(0, wordLimit).join(' ') + '...'}
+        </Text>
         {/* <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text> */}
         <Text style={styles.productPrice}>${item.price}</Text>
-        <Text style={styles.productDiscount}>
-          {`Discount: ${item.discountPercentage}%`}
-        </Text>
-        <Text style={styles.productRating}>{`Rating: ${item.rating}`}</Text>
+
       </View>
     </TouchableOpacity>
   );
@@ -92,34 +84,38 @@ const ProductList = () => {
           top: 20,
           right: 20,
           zIndex: 2,
+          borderRadius: '50%',
+          borderWidth: 2,
+          borderColor: colors.orange,
+          padding: 5,
+          backgroundColor: colors.lightOrange,
         }}
         onPress={() => {
-          console.log('clicked----------');
           navigation.navigate('UserProfile');
         }}>
-        <Icon name="user-5-fill" size={28} />
+        <Icon name="user-5-fill" size={32} />
       </TouchableOpacity>
 
       <Image source={{uri: storeInfo.imageUrl}} style={styles.storeImage} />
       <View style={styles.storeDetails}>
         <Text style={styles.storeName}>{storeInfo.name}</Text>
         <Text style={styles.storeAddress}>{storeInfo.address}</Text>
-        <Text style={styles.storeRating}>
-          {storeInfo.rating} ⭐ ({storeInfo.ratingsCount})
-        </Text>
-        <Text style={styles.storeMeta}>
-          {storeInfo.deliveryTime} • {storeInfo.distance}
-        </Text>
+        <View style={styles.storeMetaContainer}>
+          <View style={styles.storeMetaItem}>
+            <Text style={styles.metaInfo}>{storeInfo.rating}</Text>
+            <Text style={styles.metaInfoType}>{storeInfo.ratingsCount}</Text>
+          </View>
+          <View style={styles.storeMetaItem}>
+            <Text style={styles.metaInfo}>{storeInfo.deliveryTime}</Text>
+            <Text style={styles.metaInfoType}>{storeInfo.distance}</Text>
+          </View>
+        </View>
       </View>
     </View>
   );
 
   // will replace the loader with shimmer
-  if (
-    productsResponse.isLoading ||
-    productsResponse.isFetching ||
-    productsResponse.isUninitialized
-  ) {
+  if (isLoading || isFetching || isUninitialized) {
     return (
       <>
         {renderStoreHeader()}
@@ -128,15 +124,15 @@ const ProductList = () => {
     );
   }
   return (
-    <>
-      <FlatList
-        data={productsResponse.data.products} // Empty array during loading
-        keyExtractor={item => item.id}
-        renderItem={renderProduct} // Conditionally render loader
-        ListHeaderComponent={renderStoreHeader} // Header remains static
-        contentContainerStyle={styles.container}
-      />
-    </>
+    <FlatList
+      data={products.products}
+      keyExtractor={item => item.id}
+      renderItem={renderProduct}
+      ListHeaderComponent={renderStoreHeader}
+      contentContainerStyle={styles.container}
+      numColumns={2}
+      columnWrapperStyle={{justifyContent: 'space-between'}}
+    />
   );
 };
 
@@ -147,100 +143,98 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   storeHeader: {
-    flexDirection: 'row',
+    alignItems: 'center', // Center content horizontally
     padding: 20,
     borderBottomWidth: 1,
     borderColor: '#ddd',
     backgroundColor: '#f9f9f9',
   },
   storeImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 10,
-    marginRight: 15,
-  },
-  storeDetails: {
-    flex: 1,
-    justifyContent: 'center',
+    width: 100,
+    height: 100,
+    borderRadius: 10, // Circular image
+    marginBottom: 15, // Space below the image
   },
   storeName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   storeAddress: {
-    fontSize: 14,
-    color: 'gray',
-  },
-  storeRating: {
-    fontSize: 14,
-    marginTop: 5,
-  },
-  storeMeta: {
-    fontSize: 14,
-    color: 'gray',
-    marginTop: 3,
-  },
-  productContainer: {
-    margin: 10,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    backgroundColor: '#fff',
-  },
-  productText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'medium',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  loaderContainer: {
-    marginVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  listContainer: {
-    padding: 10,
-  },
-  productContainer: {
+  storeMetaContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5,
+    width: '60%',
+  },
+  metaInfo: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  metaInfoType: {
+    fontSize: 14,
+    color: colors.lightText,
+  },
+  storeDistance: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'gray',
+  },
+  storeMetaItem: {
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  // productContainer: {
+  //   margin: 10,
+  //   padding: 20,
+  //   borderWidth: 1,
+  //   borderColor: '#ddd',
+  //   borderRadius: 10,
+  //   backgroundColor: '#fff',
+  // },
+  productContainer: {
     backgroundColor: '#fff',
     borderRadius: 8,
-    marginBottom: 15,
+    margin: 8, // Add margin to create spacing between items
     padding: 10,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 2,
+    flex: 1, // Make it flexible to evenly distribute space
+    maxWidth: '48%', // Ensure two items fit per row with spacing
   },
   thumbnail: {
-    width: 100,
-    height: 100,
+    width: '100%', // Make the thumbnail full width of the card
+    height: 120, // Adjust height as needed
     borderRadius: 8,
   },
   productInfo: {
-    flex: 1,
-    marginLeft: 10,
+    marginTop: 8,
   },
   productTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
   },
   productDescription: {
-    fontSize: 14,
-    color: '#777',
+    fontSize: 12,
+    color: colors.lightText,
     marginVertical: 5,
   },
   productPrice: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
     fontWeight: 'bold',
   },
-  productDiscount: {
-    fontSize: 14,
-    color: '#e74c3c',
-  },
   productRating: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#f39c12',
   },
 });

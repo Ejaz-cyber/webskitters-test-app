@@ -14,15 +14,19 @@ import {useDispatch, useSelector} from 'react-redux';
 import Icon from 'react-native-remix-icon';
 import {TabView, SceneMap} from 'react-native-tab-view';
 import {useNavigation} from '@react-navigation/native';
-import { addToCart, decrementQuantity, incrementQuantity } from '../slices/cartSlice';
-import { globalStyles } from './styles/globalStyles';
+import {
+  addToCart,
+  decrementQuantity,
+  incrementQuantity,
+} from '../slices/cartSlice';
+import {globalStyles} from './styles/globalStyles';
+import colors from './styles/colors';
 
 const ProductDetails = () => {
-  const prod = useSelector(state => state.product.showDetailsForProduct); // Access the 'products' array from the Redux store
-  // console.log('prod-----------------', prod);
-
+  const product = useSelector(state => state.product.showDetailsForProduct);
   let cartItems = useSelector(state => state.cart.cartItems);
-  let item = cartItems.find(item => item.id === prod.id)
+  let item = cartItems.find(item => item.id === product.id);
+  console.log("otem---",item)
 
   const navigation = useNavigation();
 
@@ -35,22 +39,19 @@ const ProductDetails = () => {
     return (
       <View style={styles.tabContent}>
         <Text style={styles.sectionTitle}>Description</Text>
-        <Text style={styles.description}>{prod.description}</Text>
+        <Text style={styles.description}>{product.description}</Text>
 
         <Text style={styles.sectionTitle}>Details</Text>
-        <Text>Brand: {prod.brand}</Text>
-        <Text>Category: {prod.category}</Text>
-        <Text>Availability: {prod.availabilityStatus}</Text>
-        <Text>Shipping: {prod.shippingInformation}</Text>
-        <Text>Warranty: {prod.warrantyInformation}</Text>
+        <Text>Brand: {product.brand}</Text>
+        <Text>Category: {product.category}</Text>
+        <Text>Availability: {product.availabilityStatus}</Text>
+        <Text>Shipping: {product.shippingInformation}</Text>
+        <Text>Warranty: {product.warrantyInformation}</Text>
 
         <Text style={styles.sectionTitle}>Dimensions</Text>
-        <Text>Height: {prod.dimensions.height} cm</Text>
-        <Text>Width: {prod.dimensions.width} cm</Text>
-        <Text>Depth: {prod.dimensions.depth} cm</Text>
-
-        <Text style={styles.sectionTitle}>Tags</Text>
-        <Text>{prod.tags.join(', ')}</Text>
+        <Text>Height: {product.dimensions.height} cm</Text>
+        <Text>Width: {product.dimensions.width} cm</Text>
+        <Text>Depth: {product.dimensions.depth} cm</Text>
       </View>
     );
   }, []);
@@ -58,13 +59,17 @@ const ProductDetails = () => {
   const Reviews = React.memo(() => {
     return (
       <View>
-        {prod.reviews.map((item, index) => (
+        <Text style={[styles.sectionTitle, {marginTop: 30}]}>Reviews</Text>
+
+        {product.reviews.map((item, index) => (
           <View style={styles.reviewItem} key={index}>
             <Text style={styles.reviewerName}>{item.reviewerName}</Text>
             <Text style={styles.reviewDate}>
               {new Date(item.date).toLocaleDateString()}
             </Text>
-            <Text style={styles.reviewRating}>Rating: {item.rating}</Text>
+            <Text style={styles.reviewRating}>
+              Rating: {item.rating} <Icon name="star-fill" size={15} color={colors.orange}/>
+            </Text>
             <Text style={styles.reviewComment}>{item.comment}</Text>
           </View>
         ))}
@@ -76,107 +81,96 @@ const ProductDetails = () => {
 
   const increment = () => {
     // setQuantity(prevQuantity => prevQuantity + 1);
-    if(!item){
-      setTempQuantity(prevState => prevState + 1)
-    }else{
-      dispatch(incrementQuantity(prod.id))
+    if (!item) {
+      setTempQuantity(prevState => prevState + 1);
+    } else {
+      dispatch(incrementQuantity(product.id));
     }
   };
 
   const decrement = () => {
     // setQuantity(prevQuantity => (prevQuantity > 1 ? prevQuantity - 1 : 1));
-    if(!item){
-      if(tempQuantity > 1){
-        setTempQuantity(prevState => prevState - 1)
+    if (!item) {
+      if (tempQuantity > 1) {
+        setTempQuantity(prevState => prevState - 1);
       }
-    }else{
-      dispatch(decrementQuantity(prod.id))
+    } else {
+      dispatch(decrementQuantity(product.id));
     }
   };
 
   const handleAddToCart = () => {
     // Add your buy now logic here
-    let product = {
-      ...prod,
+    let obj = {
+      ...product,
       quantity: tempQuantity,
     };
-    console.log('Buying product with quantity:', tempQuantity);
-
-    dispatch(addToCart(product));
+    dispatch(addToCart(obj));
   };
 
   const handleGoToCart = () => {
-    navigation.navigate("Cart")
-  }
-
-  
+    navigation.navigate('Cart');
+  };
 
   return (
     <>
-      <View style={globalStyles.backIcon}>
+      <TouchableOpacity style={globalStyles.backIcon} onPress={() => navigation.goBack()}>
         <Icon name="arrow-left-circle-fill" size={40} />
-      </View>
-      <ScrollView style={styles.container}>
-        {/* Image Section */}
+      </TouchableOpacity>
+      <ScrollView style={globalStyles.container}>
         <View style={styles.imageContainer}>
           <Image
-            source={{uri: prod?.images[0]}} // replace with your image URL
+            source={{uri: product?.images[0]}} // replace with your image URL
             style={styles.productImage}
           />
-          {/* <View style={styles.thumbnailContainer}>
-        <Image
-          source={{ uri: 'https://example.com/thumbnail1.jpg' }} // replace with your thumbnail URL
-          style={styles.thumbnail}
-        />
-        <Image
-          source={{ uri: 'https://example.com/thumbnail2.jpg' }} // replace with your thumbnail URL
-          style={styles.thumbnail}
-        />
-      </View> */}
         </View>
 
-        {/* Product Details */}
         <View style={styles.detailsContainer}>
-          <Text style={styles.brand}>Brand: {prod.brand}</Text>
-          <Text style={styles.productName}>{prod.title}</Text>
-          <View style={styles.ratingContainer}>
-            <Text style={styles.rating}>{prod.rating} Ratings</Text>
-            <Text style={styles.reviews}>{prod.reviews.length} Reviews</Text>
+          <Text style={styles.brand}>Brand: {product.brand}</Text>
+          <Text style={styles.productName}>{product.title}</Text>
+
+          <View style={styles.productChipContainer}>
+            <View style={[globalStyles.productChip, {marginRight: 10}]}>
+              <Text style={globalStyles.productDiscount}>
+                {`${product.discountPercentage}% Off`}
+              </Text>
+            </View>
+            <View style={[globalStyles.productChip, {marginRight: 10}]}>
+              <Text style={globalStyles.productDiscount}>
+                {product.rating} <Icon name="star-fill" size={12} />
+              </Text>
+            </View>
           </View>
 
-          <Text style={styles.price}>Price: $18.00</Text>
-
-          {/* Quantity Selector and Buy Button */}
+          <Text style={styles.price}>Price: ${product.price}</Text>
         </View>
 
         <AboutItem />
         <Reviews />
-
-        {/* {SecondRoute()} */}
       </ScrollView>
 
       <View style={styles.actionContainer}>
-        <View style={styles.quantityContainer}>
-          <TouchableOpacity
-            style={styles.decrementButton}
-            onPress={decrement}>
-            <Text style={styles.quantityButtonText}>-</Text>
+        <View style={globalStyles.quantityContainer}>
+          <TouchableOpacity style={globalStyles.decrementButton} onPress={decrement}>
+            <Text style={globalStyles.quantityButtonText}>-</Text>
           </TouchableOpacity>
-          <Text style={styles.quantityText}>{item?.quantity ?? tempQuantity}</Text>
-          <TouchableOpacity
-            style={styles.incrementButton}
-            onPress={increment}>
-            <Text style={styles.quantityButtonText}>+</Text>
+          <Text style={globalStyles.quantityText}>
+            {item?.quantity ?? tempQuantity}
+          </Text>
+          <TouchableOpacity style={globalStyles.incrementButton} onPress={increment}>
+            <Text style={globalStyles.quantityButtonText}>+</Text>
           </TouchableOpacity>
         </View>
 
-        {(cartItems.length > 0 && item?.quantity > 0) ? (
-          <TouchableOpacity style={styles.buyButton} onPress={handleGoToCart}>
-            <Text style={styles.buyButtonText}>Go to Cart</Text>
+        {cartItems.length > 0 && item?.quantity > 0 ? (
+          <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleGoToCart}>
+            <Text style={globalStyles.buyButtonText}>Go to Cart</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.buyButton} onPress={handleAddToCart}>
-            <Text style={styles.buyButtonText}>Add item {prod.price * tempQuantity}</Text>
+          <TouchableOpacity style={globalStyles.primaryBtn} onPress={handleAddToCart}>
+            <Text style={globalStyles.buyButtonText}>
+              Add item ${product.price * tempQuantity}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -192,8 +186,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     // padding: 16,
   },
+  productChipContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
   imageContainer: {
     alignItems: 'center',
+    paddingTop: 20,
   },
   productImage: {
     width: '100%',
@@ -237,16 +236,8 @@ const styles = StyleSheet.create({
   },
   price: {
     marginTop: 10,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-  },
-  actionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'black',
-    // position: 'absolute',
-    // bottom: 0,
-    // zIndex: 9,
   },
   quantityButton: {
     backgroundColor: '#f0f0f0',
@@ -261,10 +252,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
-  buyButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
   tabBar: {
     backgroundColor: 'black',
   },
@@ -277,7 +264,7 @@ const styles = StyleSheet.create({
   },
   tabContent: {
     // flex: 1,
-    padding: 16,
+    // padding: 16,
   },
   sectionTitle: {
     fontSize: 16,
@@ -289,7 +276,7 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
   reviewItem: {
-    padding: 16,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
     // backgroundColor: 'black',
@@ -304,7 +291,7 @@ const styles = StyleSheet.create({
   },
   reviewRating: {
     fontSize: 14,
-    color: '#f39c12',
+    color: colors.orange,
   },
   reviewComment: {
     fontSize: 14,
@@ -316,37 +303,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 10,
-  },
-  quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 5,
-  },
-  decrementButton: {
-    padding: 10,
-    backgroundColor: '#f0f0f0',
-    borderTopLeftRadius: 5,
-    borderBottomLeftRadius: 5,
-  },
-  incrementButton: {
-    padding: 10,
-    backgroundColor: '#f0f0f0',
-    borderTopRightRadius: 5,
-    borderBottomRightRadius: 5,
-  },
-  quantityButtonText: {
-    fontSize: 18,
-    color: '#333',
-    fontWeight: 'bold',
-  },
-  quantityText: {
-    paddingHorizontal: 10,
-    fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
   },
   buyButton: {
     padding: 10,
