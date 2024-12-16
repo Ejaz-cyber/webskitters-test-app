@@ -1,5 +1,5 @@
 import {useNavigation} from '@react-navigation/native';
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Image,
   Modal,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import Icon from 'react-native-remix-icon';
 import {useDispatch, useSelector} from 'react-redux';
@@ -20,12 +21,14 @@ import {
 import {addOrder} from '../slices/orderSlice';
 import {globalStyles} from './styles/globalStyles';
 import colors from './styles/colors';
+import UserCard from '../components/UserCard';
 
 const Cart = () => {
   const cartItems = useSelector(state => state.cart.cartItems);
   const dispatch = useDispatch();
   const [isLoading, setLoading] = useState(false);
 
+  console.log("cartitems", cartItems)
   const totalAmount = cartItems
     .reduce((sum, item) => sum + item.price * item.quantity, 0)
     .toFixed(2);
@@ -40,40 +43,46 @@ const Cart = () => {
     dispatch(incrementQuantity(id));
   };
 
+  useEffect(() => {
+    if(cartItems.length == 0){
+      navigation.goBack()
+    }
+  }, [cartItems])
+
   const getOrderId = () => {
     const randomNumber = Math.floor(Math.random() * 90000) + 10000;
     return randomNumber;
   };
   const handleCheckout = () => {
     setLoading(true);
-  
+
     let orderId = getOrderId();
     let orderBody = {
       orderId,
       date: new Date().toLocaleString(),
       status: 'in-progress',
       items: cartItems,
+      total: totalAmount,
     };
-  
-    //delay (e.g., 2 seconds)
+
+    //delay to show loader
     setTimeout(() => {
       dispatch(addOrder(orderBody));
       dispatch(clearCart());
       setLoading(false);
-  
+
       navigation.reset({
         index: 1,
         routes: [
-          { name: 'ProductList' },
-          { name: 'OrderDetails', params: { orderId } },
+          {name: 'ProductList'},
+          {name: 'OrderDetails', params: {orderId}},
         ],
       });
-    }, 2000); // 2000ms = 2 seconds
+    }, 1000); // 1 seconds
   };
-  
 
   const renderItem = ({item}) => (
-    <View style={styles.itemContainer}>
+    <View style={styles.itemContainer} >
       {/* Thumbnail Image */}
       <Image source={{uri: item.thumbnail}} style={styles.thumbnail} />
 
@@ -107,7 +116,13 @@ const Cart = () => {
   );
 
   return (
-    <View style={globalStyles.container}>
+    <>
+    <TouchableOpacity
+        style={globalStyles.backIcon}
+        onPress={() => navigation.goBack()}>
+        <Icon name="arrow-left-circle-fill" size={40} />
+      </TouchableOpacity>
+    <ScrollView style={globalStyles.container}>
       <Modal
         transparent={true}
         animationType="fade"
@@ -121,24 +136,33 @@ const Cart = () => {
         </View>
       </Modal>
 
-      <TouchableOpacity
-        style={globalStyles.backIcon}
-        onPress={() => navigation.goBack()}>
-        <Icon name="arrow-left-circle-fill" size={40} />
-      </TouchableOpacity>
       <View
         style={{
           marginTop: 60,
         }}>
         <Text style={styles.header}>Cart</Text>
-        <FlatList
+        <Text
+          style={{
+            marginTop: 40,
+            fontSize: 18,
+            fontWeight: 'bold',
+            marginBottom: 5,
+          }}>
+          Cart Items
+        </Text>
+        {cartItems && <FlatList
           data={cartItems}
           renderItem={renderItem}
           keyExtractor={item => item.id}
-        />
+          scrollEnabled={false}
+        />}
+
+        <UserCard />
       </View>
 
-      <View
+      
+    </ScrollView>
+    <View
         style={[
           globalStyles.actionContainer,
           {position: 'absolute', bottom: 0, right: 0},
@@ -151,7 +175,7 @@ const Cart = () => {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </>
   );
 };
 

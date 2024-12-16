@@ -3,6 +3,7 @@ import { removeToken } from '../utils/tokenUtils';
 
 const initialState = {
   user: null,
+  location: null,
   status: 'idle',
   error: null,
 };
@@ -13,6 +14,7 @@ const userSlice = createSlice({
   reducers: {
     setUser: (state, action) => {
       state.user = action.payload;
+      state.location = "132 My Street, Kingston, New York"
     },
     clearUser: (state) => {
       state.user = null;

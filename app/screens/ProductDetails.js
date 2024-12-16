@@ -26,7 +26,6 @@ const ProductDetails = () => {
   const product = useSelector(state => state.product.showDetailsForProduct);
   let cartItems = useSelector(state => state.cart.cartItems);
   let item = cartItems.find(item => item.id === product.id);
-  console.log("otem---",item)
 
   const navigation = useNavigation();
 

@@ -6,27 +6,20 @@ import {
   StyleSheet,
   Image,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import {useSelector} from 'react-redux';
+import Icon from 'react-native-remix-icon';
+import { globalStyles } from './styles/globalStyles';
+import { useNavigation } from '@react-navigation/native';
+import UserCard from '../components/UserCard';
 
 const OrderDetails = ({route}) => {
-  const {orderId} = route.params
+  const {orderId} = route.params;
   const [itemHeight, setItemHeight] = useState(null);
-
-  console.log('idddddddddd-----', JSON.stringify(orderId));
-
+  const navigation = useNavigation()
   const orders = useSelector(state => state.order.orders);
-  
-  console.log('orderssssss-----', JSON.stringify(orders));
-  console.log('orderssssss--len----', JSON.stringify(orders.length));
-
-  const order = orders.find(order => order.orderId === orderId)
-  console.log('order-----', JSON.stringify(order.items));
-  console.log('order id', JSON.stringify(order.orderId));
-
-  // return(
-  //   <></>
-  // )
+  const order = orders.find(order => order.orderId === orderId);
 
   const handleItemLayout = useCallback(event => {
     if (itemHeight == null) {
@@ -35,32 +28,50 @@ const OrderDetails = ({route}) => {
   }, []);
 
   const renderItem = ({item, index}) => {
-    console.log("item---", item.title)
-    return <View
-      style={[styles.itemContainer, {borderBottomWidth: index == order.items.length - 1 ? 0 : 1}]}
-      onLayout={handleItemLayout}
-      key={item.id}>
-      <Image source={{uri: item.thumbnail}} style={styles.thumbnail} />
-      <View style={styles.itemDetails}>
-        <Text style={styles.itemTitle}>{item.title}</Text>
-        <Text style={styles.itemPrice}>
-          ${item.price.toFixed(2)} x {item.quantity}
-        </Text>
-        <Text style={styles.itemSubtotal}>
-          Subtotal: ${(item.price * item.quantity).toFixed(2)}
-        </Text>
+    return (
+      <View
+        style={[
+          styles.itemContainer,
+          {borderBottomWidth: index == order.items.length - 1 ? 0 : 1},
+        ]}
+        onLayout={handleItemLayout}
+        key={item.id}>
+        <Image source={{uri: item.thumbnail}} style={styles.thumbnail} />
+        <View style={styles.itemDetails}>
+          <Text style={styles.itemTitle}>{item.title}</Text>
+          <Text style={styles.itemPrice}>
+            ${item.price.toFixed(2)} x {item.quantity}
+          </Text>
+          <Text style={styles.itemSubtotal}>
+            Subtotal: ${(item.price * item.quantity).toFixed(2)}
+          </Text>
+        </View>
       </View>
-    </View>
-  }
+    );
+  };
 
   return (
     <ScrollView style={styles.container}>
-      {/* Order Summary */}
+      <TouchableOpacity
+        style={globalStyles.backIcon}
+        onPress={() => navigation.goBack()}>
+        <Icon name="arrow-left-circle-fill" size={40} />
+      </TouchableOpacity>
+      <View
+        style={{
+          marginTop: 60,
+        }}>
+        <Text style={globalStyles.header}>Order Details</Text>
+      </View>
+      <UserCard />
+
       <View style={styles.summaryContainer}>
         <Text style={styles.sectionTitle}>Order Summary</Text>
         <Text style={styles.summaryText}>Order ID: {order.orderId}</Text>
         <Text style={styles.summaryText}>Date: {order.date}</Text>
-        <Text style={[styles.summaryText, styles.status]}>Status: {order.status}</Text>
+        <Text style={[styles.summaryText, styles.status]}>
+          Status: {order.status}
+        </Text>
       </View>
 
       <View style={styles.itemsContainer}>
@@ -97,6 +108,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   summaryContainer: {
+    marginTop: 10,
     backgroundColor: '#fff',
     padding: 15,
     marginBottom: 10,

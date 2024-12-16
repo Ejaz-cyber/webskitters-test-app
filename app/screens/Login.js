@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  ToastAndroid,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -24,9 +25,17 @@ const Login = () => {
   const [loginUser, loginUserResult] = useLoginUserMutation();
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    console.log(loginUserResult)
+  },[loginUserResult])
+
   const handleLogin = () => {
-    // Your login logic here
     console.log('Login with username:', username, 'and password:', password);
+
+    if(password.length < 5){
+      ToastAndroid.show("Password must be greater than 5 characters", ToastAndroid.SHORT);
+      return
+    }
     loginUser({
       username,
       password,
@@ -37,6 +46,9 @@ const Login = () => {
     // console.log("login user result", loginUserResult)
     if (loginUserResult.status == 'fulfilled') {
       navigation.navigate('ProductList');
+    }
+    if (loginUserResult.error != null) {
+      ToastAndroid.show(loginUserResult.error.data?.message, ToastAndroid.SHORT);
     }
   }, [loginUserResult]);
 

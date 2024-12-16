@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {clearUser} from '../slices/userSlice';
+import {globalStyles} from './styles/globalStyles';
+import Icon from 'react-native-remix-icon';
 
 const UserProfile = () => {
   const {user} = useSelector(state => state.user.user);
@@ -63,7 +65,10 @@ const UserProfile = () => {
   console.log('cached user', user);
 
   return (
-    <View style={styles.container}>
+    <View style={[globalStyles.container, {paddingTop: '30%'}]}>
+      <TouchableOpacity style={globalStyles.backIcon} onPress={() => navigation.goBack()}>
+        <Icon name="arrow-left-circle-fill" size={40} />
+      </TouchableOpacity>
       <View style={styles.header}>
         <Image source={{uri: user?.image}} style={styles.profilePic} />
         <Text style={styles.userName}>
@@ -98,19 +103,25 @@ const UserProfile = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Log Out</Text>
+      <TouchableOpacity
+        style={[
+          globalStyles.primaryBtn,
+          {
+            marginHorizontal: 16,
+            position: 'absolute',
+            bottom: 10,
+            left: 0,
+            right: 0,
+          },
+        ]}
+        onPress={handleLogout}>
+        <Text style={globalStyles.buttonText}>Log Out</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8E6F3',
-    paddingTop: '30%',
-  },
   header: {
     alignItems: 'center',
     marginBottom: 20,
@@ -155,22 +166,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#555',
   },
-  logoutButton: {
-    marginHorizontal: 16, // Adds space from the left and right edges
-    backgroundColor: '#ff4d4d',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    position: 'absolute', // Keeps the button positioned at the bottom
-    bottom: 10, // Sets the distance from the bottom of the screen
-    left: 0, // Ensures the button starts from the left
-    right: 0, // Ensures the button extends to the right edge
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  // logoutButton: {
+  //   marginHorizontal: 16,
+  //   backgroundColor: '#ff4d4d',
+  //   padding: 15,
+  //   borderRadius: 5,
+  //   alignItems: 'center',
+  //   position: 'absolute',
+  //   bottom: 10,
+  //   left: 0,
+  //   right: 0,
+  // },
+  // logoutButtonText: {
+  //   color: '#fff',
+  //   fontSize: 16,
+  //   fontWeight: 'bold',
+  // },
   optionsContainer: {
     marginHorizontal: 16,
     justifyContent: 'center',
@@ -185,8 +196,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   option: {
-    paddingVertical: 10, 
-    borderBottomWidth: 1, 
+    paddingVertical: 10,
+    borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   disabled: {

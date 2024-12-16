@@ -147,13 +147,15 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomWidth: 1,
     borderColor: '#ddd',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: colors.lightOrange,
   },
   storeImage: {
     width: 100,
     height: 100,
     borderRadius: 10, // Circular image
     marginBottom: 15, // Space below the image
+    borderWidth: 1,
+    borderColor: colors.orange,
   },
   storeName: {
     fontSize: 22,
@@ -201,18 +203,18 @@ const styles = StyleSheet.create({
   productContainer: {
     backgroundColor: '#fff',
     borderRadius: 8,
-    margin: 8, // Add margin to create spacing between items
+    margin: 8,
     padding: 10,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: 2,
-    flex: 1, // Make it flexible to evenly distribute space
-    maxWidth: '48%', // Ensure two items fit per row with spacing
+    elevation: 1,
+    flex: 1, 
+    maxWidth: '48%', 
   },
   thumbnail: {
-    width: '100%', // Make the thumbnail full width of the card
-    height: 120, // Adjust height as needed
+    width: '100%',
+    height: 120, 
     borderRadius: 8,
   },
   productInfo: {

@@ -55,7 +55,13 @@ export const globalStyles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 10,
   },
-  
+  header: {
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
   buyButtonText: {
     color: '#fff',
     fontWeight: 'bold',
